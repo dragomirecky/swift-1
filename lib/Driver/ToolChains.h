@@ -31,6 +31,9 @@ protected:
                            const JobContext &context,
                            bool isLinkingExecutable) const;
 
+  void addProfileGenerationArgs(llvm::opt::ArgStringList &Arguments,
+                                const JobContext &context) const;
+
   void addDeploymentTargetArgs(llvm::opt::ArgStringList &Arguments,
                                const JobContext &context) const;
 

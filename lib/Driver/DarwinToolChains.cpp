@@ -359,6 +359,45 @@ toolchains::Darwin::addArgsToLinkStdlib(ArgStringList &Arguments,
 }
 
 void
+toolchains::Darwin::addProfileGenerationArgs(ArgStringList &Arguments,
+                                             const JobContext &context) const {
+  const llvm::Triple &Triple = getTriple();
+  if (context.Args.hasArg(options::OPT_profile_generate)) {
+    SmallString<128> LibProfile;
+    getClangLibraryPath(context.Args, LibProfile);
+
+    StringRef RT;
+    if (Triple.isiOS()) {
+      if (Triple.isTvOS())
+        RT = "tvos";
+      else
+        RT = "ios";
+    } else if (Triple.isWatchOS()) {
+      RT = "watchos";
+    } else {
+      assert(Triple.isMacOSX());
+      RT = "osx";
+    }
+
+    StringRef Sim;
+    if (tripleIsAnySimulator(Triple)) {
+      Sim = "sim";
+    }
+
+    llvm::sys::path::append(LibProfile,
+                            "libclang_rt.profile_" + RT + Sim + ".a");
+
+    // FIXME: Continue accepting the old path for simulator libraries for now.
+    if (!Sim.empty() && !llvm::sys::fs::exists(LibProfile)) {
+      llvm::sys::path::remove_filename(LibProfile);
+      llvm::sys::path::append(LibProfile, "libclang_rt.profile_" + RT + ".a");
+    }
+
+    Arguments.push_back(context.Args.MakeArgString(LibProfile));
+  }
+}
+
+void
 toolchains::Darwin::addDeploymentTargetArgs(ArgStringList &Arguments,
                                             const JobContext &context) const {
   const llvm::Triple &Triple = getTriple();
@@ -531,39 +570,7 @@ toolchains::Darwin::constructInvocation(const LinkJobAction &job,
   addArgsToLinkStdlib(Arguments, context,
                       job.getKind() == LinkKind::Executable);
 
-  if (context.Args.hasArg(options::OPT_profile_generate)) {
-    SmallString<128> LibProfile;
-    getClangLibraryPath(context.Args, LibProfile);
-
-    StringRef RT;
-    if (Triple.isiOS()) {
-      if (Triple.isTvOS())
-        RT = "tvos";
-      else
-        RT = "ios";
-    } else if (Triple.isWatchOS()) {
-      RT = "watchos";
-    } else {
-      assert(Triple.isMacOSX());
-      RT = "osx";
-    }
-
-    StringRef Sim;
-    if (tripleIsAnySimulator(Triple)) {
-      Sim = "sim";
-    }
-
-    llvm::sys::path::append(LibProfile,
-                            "libclang_rt.profile_" + RT + Sim + ".a");
-
-    // FIXME: Continue accepting the old path for simulator libraries for now.
-    if (!Sim.empty() && !llvm::sys::fs::exists(LibProfile)) {
-      llvm::sys::path::remove_filename(LibProfile);
-      llvm::sys::path::append(LibProfile, "libclang_rt.profile_" + RT + ".a");
-    }
-
-    Arguments.push_back(context.Args.MakeArgString(LibProfile));
-  }
+  addProfileGenerationArgs(Arguments, context);
 
   addDeploymentTargetArgs(Arguments, context);
 
