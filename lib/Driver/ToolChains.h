@@ -27,6 +27,10 @@ protected:
   void addArgsToLinkARCLite(llvm::opt::ArgStringList &Arguments,
                             const JobContext &context) const;
 
+  void addSanitizerArgs(llvm::opt::ArgStringList &Arguments,
+                        const LinkJobAction &job,
+                        const JobContext &context) const;
+
   void addArgsToLinkStdlib(llvm::opt::ArgStringList &Arguments,
                            const JobContext &context,
                            bool isLinkingExecutable) const;
