@@ -31,6 +31,9 @@ protected:
                            const JobContext &context,
                            bool isLinkingExecutable) const;
 
+  void addDeploymentTargetArgs(llvm::opt::ArgStringList &Arguments,
+                               const JobContext &context) const;
+
   InvocationInfo constructInvocation(const InterpretJobAction &job,
                                      const JobContext &context) const override;
   InvocationInfo constructInvocation(const LinkJobAction &job,
