@@ -411,6 +411,7 @@ toolchains::Darwin::addArgsToLinkStdlib(ArgStringList &Arguments,
       // frozen swift-in-OS libraries in the usr/lib/swift location. That's the
       // best we can give for rpath, though it might fail at runtime if the
       // support package isn't installed.
+      Arguments.push_back("-rpath");
       Arguments.push_back(context.Args.MakeArgString("/usr/lib/swift"));
     }
   }
